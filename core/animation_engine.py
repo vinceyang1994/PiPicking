@@ -90,7 +90,7 @@ class AnimationEngine(QObject):
         # Get font metrics
         font = QFont(
             self.config_manager.get("font_family", "SimHei"),
-            self.config_manager.get("font_size", 120)
+            self.config_manager.get("font_size", 400)
         )
         
         # This is just a placeholder - in a real app you'd have proper stroke data
@@ -190,7 +190,7 @@ class AnimationEngine(QObject):
         # Set up font
         font = QFont(
             self.config_manager.get("font_family", "SimHei"),
-            self.config_manager.get("font_size", 120)
+            self.config_manager.get("font_size", 400)
         )
         painter.setFont(font)
         

@@ -16,7 +16,7 @@ class ConfigManager:
     DEFAULT_CONFIG = {
         "stroke_color": "#FF0000",  # Default red color
         "is_mixed_color": False,    # Single color by default
-        "font_size": 120,           # Default font size
+        "font_size": 400,           # Default font size
         "font_family": "SimHei",    # Default font
         "animation_count": 3,       # Default number of animations
         "animation_interval": 1000, # Default animation interval in ms

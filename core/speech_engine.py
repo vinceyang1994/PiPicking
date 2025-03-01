@@ -32,10 +32,15 @@ class SpeechEngine(QObject):
         chinese_voice = None
         
         for voice in voices:
-            locale = voice.locale()
-            if locale.language() == QLocale.Chinese:
-                chinese_voice = voice
-                break
+            # Check if the locale method exists
+            if hasattr(voice, 'locale'):
+                locale = voice.locale()
+                if locale.language() == QLocale.Chinese:
+                    chinese_voice = voice
+                    break
+            else:
+                # Handle the case where locale method does not exist
+                print(f"Voice {voice.name()} does not have a locale method.")
         
         if chinese_voice:
             self.speech.setVoice(chinese_voice)

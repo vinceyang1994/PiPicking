@@ -6,9 +6,12 @@ Main entry point for the Chinese Character Reading Application.
 """
 
 import sys
+import main
+
 from PyQt5.QtWidgets import QApplication
 from ui.main_window import MainWindow
 from core.config_manager import ConfigManager
+
 
 def main():
     """Initialize and run the application."""

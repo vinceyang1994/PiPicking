@@ -50,7 +50,7 @@ class CharacterWidget(QWidget):
         painter.setRenderHint(QPainter.Antialiasing)
         
         # Clear background
-        painter.fillRect(self.rect(), self.palette().background())
+        painter.fillRect(self.rect(), self.palette().window())
         
         # Render character animation
         self.animation_engine.render(painter, self.rect())
@@ -62,8 +62,10 @@ class CharacterWidget(QWidget):
             event (QMouseEvent): Mouse event.
         """
         if event.button() == Qt.LeftButton:
-            # Emit signal to re-pronounce the character
-            self.parent().re_pronounce_character()
+            main_window = self.window()  # 获取主窗口实例
+            
+            if hasattr(main_window, 're_pronounce_character'):
+                main_window.re_pronounce_character()
 
 
 class MainWindow(QMainWindow):
@@ -96,7 +98,7 @@ class MainWindow(QMainWindow):
     def setup_ui(self):
         """Set up the user interface."""
         # Set window title
-        self.setWindowTitle("Chinese Character Learning")
+        self.setWindowTitle("小丕十字")
         
         # Create central widget
         central_widget = QWidget()
@@ -128,7 +130,7 @@ class MainWindow(QMainWindow):
         # Fonts menu
         fonts_menu = self.menuBar().addMenu("&Fonts")
         
-        add_font_action = QAction("&Add Font", self)
+        add_font_action = QAction("&Add Character", self)
         add_font_action.triggered.connect(self.show_font_dialog)
         fonts_menu.addAction(add_font_action)
         
