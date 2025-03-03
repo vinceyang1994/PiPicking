@@ -149,9 +149,10 @@ class AnimationEngine(QObject):
         # Increment animation count
         self.animation_count += 1
         
-        if self.animation_count >= self.target_animation_count:
+        if self.animation_count > self.target_animation_count:
             # Animation sequence complete
             self.animation_completed.emit()
+            return  # 结束动画，不再重置笔画可见性
         
         # Reset all strokes to invisible
         for stroke in self.strokes:
@@ -163,7 +164,7 @@ class AnimationEngine(QObject):
         
         # Signal to update the display
         self.animation_updated.emit()
-        
+
     def animate_next_stroke(self):
         """
             Animate the next stroke in sequence.
@@ -185,7 +186,6 @@ class AnimationEngine(QObject):
         for stroke in self.strokes:
             stroke.visible = False  # 这里可以选择重置可见性，True则保持为笔画着色
         
-        self.animation_updated.emit()
         # Set the aftertaste time after all strokes are displayed, 
         # and then re-display this/next the Chinese character animation.
         self.display_timer.start(self.config_manager.get("display_time", 3000))

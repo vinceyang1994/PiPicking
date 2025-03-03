@@ -1,10 +1,10 @@
 {
-    "stroke_color": "#000000",
-    "is_mixed_color": false,
+    "stroke_color": "#5d1fc8",
+    "is_mixed_color": true,
     "font_size": 700,
-    "font_family": "华文楷体",
+    "font_family": "System",
     "animation_count": 3,
     "animation_interval": 1000,
-    "display_time": 5000,
+    "display_time": 2000,
     "auto_pronounce": true
 }

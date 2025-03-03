@@ -127,8 +127,8 @@ class MainWindow(QMainWindow):
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
         
-        # Fonts menu
-        fonts_menu = self.menuBar().addMenu("&Fonts")
+        # Dict menu
+        fonts_menu = self.menuBar().addMenu("&Dict")
         
         add_font_action = QAction("&Add Character", self)
         add_font_action.triggered.connect(self.show_font_dialog)
