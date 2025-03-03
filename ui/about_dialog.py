@@ -24,7 +24,7 @@ class AboutDialog(QDialog):
         super().__init__(parent)
         
         self.setWindowTitle("About Chinese Character Reading App")
-        self.setFixedSize(500, 300)
+        self.setFixedSize(550, 300)
         
         self.setup_ui()
     
@@ -70,3 +70,13 @@ class AboutDialog(QDialog):
         close_button = QPushButton("Close")
         close_button.clicked.connect(self.accept)
         button_layout.addStretch()
+        button_layout.addWidget(close_button)
+        button_layout.addStretch()
+        
+        # 将所有组件添加到主布局
+        layout.addWidget(title_label)
+        layout.addWidget(version_label)
+        layout.addWidget(desc_label)
+        layout.addLayout(button_layout)
+
+        self.setLayout(layout)
