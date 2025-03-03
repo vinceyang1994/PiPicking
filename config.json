@@ -4,7 +4,7 @@
     "font_size": 700,
     "font_family": "华文楷体",
     "animation_count": 3,
-    "animation_interval": 1000,
+    "animation_interval": 600,
     "display_time": 3000,
     "auto_pronounce": true
 }

@@ -98,7 +98,7 @@ class MainWindow(QMainWindow):
     def setup_ui(self):
         """Set up the user interface."""
         # Set window title
-        self.setWindowTitle("小丕十字")
+        self.setWindowTitle("小丕拾字")
         
         # Create central widget
         central_widget = QWidget()

@@ -3,11 +3,13 @@
 
 """
 Animation engine for the Chinese Character Reading Application.
-Handles stroke animation and rendering.
+Handles stroke animation and rendering using Make Me A Hanzi data.
 """
 
-from PyQt5.QtCore import QObject, QTimer, pyqtSignal
-from PyQt5.QtGui import QPainter, QPainterPath, QFont
+from PyQt5.QtCore import QObject, QTimer, pyqtSignal, Qt
+from PyQt5.QtGui import QPainter, QPainterPath, QColor, QPen
+import json
+import re
 import random
 
 class StrokeInfo:
@@ -33,7 +35,7 @@ class AnimationEngine(QObject):
     animation_completed = pyqtSignal()
     # Signal emitted when a new stroke is shown (for pronunciation)
     stroke_added = pyqtSignal()
-    
+
     def __init__(self, config_manager):
         """Initialize the animation engine.
         
@@ -53,7 +55,8 @@ class AnimationEngine(QObject):
         self.target_animation_count = self.config_manager.get("animation_count", 3)
         self.is_hollow = True
         self.is_animating = False
-    
+        self.background_path = QPainterPath()  # 添加背景路径存储
+
     def set_character(self, character):
         """Set the current character for animation.
         
@@ -64,6 +67,11 @@ class AnimationEngine(QObject):
         self.reset_animation()
         self.prepare_strokes()
         
+        # 构建背景路径
+        self.background_path = QPainterPath()
+        for stroke in self.strokes:
+            self.background_path.addPath(stroke.path)
+        
         # Start with hollow display
         self.is_hollow = True
         self.animation_count = 0
@@ -73,55 +81,59 @@ class AnimationEngine(QObject):
         
         # Signal to update the display
         self.animation_updated.emit()
-    
-    def prepare_strokes(self):
-        """Prepare stroke paths for the current character."""
-        # This is a simplified method of stroke extraction
-        # In a real application, you would use a stroke database or font information
+
+    def load_hanzi_data(self, character):
+        """Load stroke data from graphics.txt for a given character."""
+        try:
+            with open('assets\\graphics.txt', 'r', encoding='utf-8') as f:
+                for line in f:
+                    data = json.loads(line.strip())
+                    if data.get('character') == character:
+                        return data
+            print(f"No data found for character '{character}' in graphics.txt")
+            return None
+        except Exception as e:
+            print(f"Error loading graphics.txt: {e}")
+            return None
+
+    def parse_svg_path(self, path_string):
+        """Parse SVG path string into a QPainterPath with original coordinates."""
+        path = QPainterPath()
+        commands = re.findall(r'([MLQCZ])\s*([-\d.,\s]*)', path_string)
         
+        for cmd, args_str in commands:
+            args = [float(x) for x in re.findall(r'[-+]?\d*\.\d+|\d+', args_str)]
+            if cmd == 'M' and len(args) >= 2:
+                path.moveTo(args[0], args[1])
+            elif cmd == 'L' and len(args) >= 2:
+                path.lineTo(args[0], args[1])
+            elif cmd == 'Q' and len(args) >= 4:
+                path.quadTo(args[0], args[1], args[2], args[3])
+            elif cmd == 'C' and len(args) >= 6:
+                path.cubicTo(args[0], args[1], args[2], args[3], args[4], args[5])
+            elif cmd == 'Z':
+                path.closeSubpath()
+        return path
+
+    def prepare_strokes(self):
+        """Prepare stroke paths for the current character using Make Me A Hanzi data."""
         self.strokes = []
         
         if not self.current_character:
             return
         
-        # For demonstration purposes, we'll create artificial strokes
-        # In a real app, you would use HanLP, OpenCC, or similar libraries to get real stroke data
+        hanzi_data = self.load_hanzi_data(self.current_character)
+        if not hanzi_data or 'strokes' not in hanzi_data:
+            print(f"No stroke data available for '{self.current_character}'")
+            return
         
-        # Get font metrics
-        font = QFont(
-            self.config_manager.get("font_family", "SimHei"),
-            self.config_manager.get("font_size", 400)
-        )
+        for stroke in hanzi_data['strokes']:
+            path = self.parse_svg_path(stroke)
+            if not path.isEmpty():
+                self.strokes.append(StrokeInfo(path, False))
         
-        # This is just a placeholder - in a real app you'd have proper stroke data
-        # Here we're just dividing the character into artificial "strokes"
-        char_path = QPainterPath()
-        char_path.addText(0, 0, font, self.current_character)
-        
-        # Simulate 3-8 strokes per character
-        stroke_count = random.randint(3, 8)
-        
-        # Create artificial strokes by dividing the bounding rect
-        bounds = char_path.boundingRect()
-        width = bounds.width()
-        height = bounds.height()
-        
-        for i in range(stroke_count):
-            stroke_path = QPainterPath()
-            
-            # Create a small sub-rectangle representing a "stroke"
-            x = bounds.x() + (i * width / stroke_count)
-            y = bounds.y() + (i * height / stroke_count)
-            w = width / stroke_count
-            h = height / stroke_count
-            
-            # Add part of the character to this "stroke"
-            stroke_path.addRect(x, y, w, h)
-            stroke_path = char_path.intersected(stroke_path)
-            
-            if not stroke_path.isEmpty():
-                self.strokes.append(StrokeInfo(stroke_path, False))
-    
+        print(f"Prepared {len(self.strokes)} strokes for '{self.current_character}'")
+
     def reset_animation(self):
         """Reset the animation state."""
         self.animation_timer.stop()
@@ -131,11 +143,19 @@ class AnimationEngine(QObject):
         # Reset all strokes to invisible
         for stroke in self.strokes:
             stroke.visible = False
-    
+
     def start_stroke_animation(self):
         """Start the stroke animation sequence."""
         self.is_animating = True
         self.is_hollow = False
+        
+        # Increment animation count
+        self.animation_count += 1
+        
+        if self.animation_count >= self.target_animation_count:
+            # Animation sequence complete
+            self.animation_completed.emit()
+            self.display_timer.stop()
         
         # Reset all strokes to invisible
         for stroke in self.strokes:
@@ -147,9 +167,13 @@ class AnimationEngine(QObject):
         
         # Signal to update the display
         self.animation_updated.emit()
-    
+        self.display_timer.start(self.config_manager.get("display_time", 3000))
+        
     def animate_next_stroke(self):
-        """Animate the next stroke in sequence."""
+        """
+            Animate the next stroke in sequence.
+            connected with timer, after time out, execute automatically.
+        """
         # Find the next invisible stroke
         for stroke in self.strokes:
             if not stroke.visible:
@@ -161,22 +185,15 @@ class AnimationEngine(QObject):
         # All strokes are visible, end of sequence
         self.animation_timer.stop()
         
-        # Increment animation count
-        self.animation_count += 1
+        self.is_animating = False
+        # Start next animation round after a delay
+        self.is_hollow = True
+        for stroke in self.strokes:
+            stroke.visible = False
         
-        if self.animation_count >= self.target_animation_count:
-            # Animation sequence complete
-            self.is_animating = False
-            self.animation_completed.emit()
-        else:
-            # Start next animation round after a delay
-            self.is_hollow = True
-            for stroke in self.strokes:
-                stroke.visible = False
-            
-            self.animation_updated.emit()
-            self.display_timer.start(self.config_manager.get("display_time", 3000))
-    
+        self.animation_updated.emit()
+        
+
     def render(self, painter, rect):
         """Render the current animation state.
         
@@ -184,51 +201,44 @@ class AnimationEngine(QObject):
             painter (QPainter): The painter to render with.
             rect (QRect): The rectangle to render in.
         """
-        if not self.current_character:
+        if not self.strokes:
             return
         
-        # Set up font
-        font = QFont(
-            self.config_manager.get("font_family", "SimHei"),
-            self.config_manager.get("font_size", 400)
-        )
-        painter.setFont(font)
+        painter.save()
+        painter.setRenderHint(QPainter.Antialiasing)
         
-        # Create the full character path
-        char_path = QPainterPath()
-        char_path.addText(rect.center().x(), rect.center().y(), font, self.current_character)
+        # ==== 核心坐标系调整 ====
+        scale = min(rect.width(), rect.height()) * 0.9  # 使用90%的窗口空间
+        offset_x = rect.width() / 2
+        offset_y = rect.height() / 2
         
-        # Center the character
-        bounds = char_path.boundingRect()
-        painter.translate(
-            rect.center().x() - bounds.center().x(),
-            rect.center().y() - bounds.center().y()
-        )
+        # 坐标系变换
+        painter.translate(offset_x, offset_y)          # 原点移到绘制区域中心
+        painter.scale(scale / 1024, -scale / 1024)    # Y轴翻转并缩放
+        painter.translate(-512, -512)                # 中心对齐原始坐标系
         
-        # Draw the hollow outline
-        painter.setPen(self.config_manager.get_stroke_color())
-        painter.setBrush(painter.background())
-        painter.drawPath(char_path)
+        # 绘制灰色背景
+        bg_pen = QPen(QColor("#E0E0E0"), 3)  # 浅灰色
+        bg_pen.setCapStyle(Qt.RoundCap)
+        painter.setPen(bg_pen)
+        painter.drawPath(self.background_path)
         
-        # If not in hollow mode, draw the visible strokes
-        if not self.is_hollow:
-            # Set up fill color
-            if self.config_manager.get("is_mixed_color", False):
-                # Use different colors for each stroke
-                colors = []
-                base_color = self.config_manager.get_stroke_color()
-                for _ in range(len(self.strokes)):
-                    h = (base_color.hue() + random.randint(-30, 30)) % 360
-                    s = min(max(base_color.saturation() + random.randint(-30, 30), 0), 255)
-                    v = min(max(base_color.value() + random.randint(-30, 30), 0), 255)
-                    colors.append(base_color.convertTo(QColor.Hsv).setHsv(h, s, v))
-            else:
-                # Use a single color for all strokes
-                colors = [self.config_manager.get_stroke_color()] * len(self.strokes)
-            
-            # Draw each visible stroke
-            for i, stroke in enumerate(self.strokes):
-                if stroke.visible:
-                    painter.setPen(colors[i % len(colors)])
-                    painter.setBrush(colors[i % len(colors)])
-                    painter.drawPath(stroke.path)
+        # 设置绘制样式
+        stroke_color = self.config_manager.get_stroke_color()
+        pen = QPen(stroke_color, 3)
+        pen.setCapStyle(Qt.RoundCap)
+        painter.setPen(pen)
+        
+        # 绘制可见笔画
+        for stroke in self.strokes:
+            if stroke.visible:
+                painter.drawPath(stroke.path)
+        
+        # 绘制空心轮廓
+        if self.is_hollow:
+            hollow_pen = QPen(stroke_color, 3)
+            hollow_pen.setStyle(Qt.DashLine)
+            painter.setPen(hollow_pen)
+            painter.drawPath(self.background_path)
+        
+        painter.restore()
