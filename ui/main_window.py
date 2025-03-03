@@ -190,11 +190,11 @@ class MainWindow(QMainWindow):
         count = self.character_manager.get_character_count()
         self.statusBar().showMessage(f"Character {index} of {count}")
         
-        # Set character for animation
-        self.animation_engine.set_character(character)
-        
         # Pronounce the character
         self.speech_engine.pronounce(character)
+        
+        # Set character for animation
+        self.animation_engine.set_character(character)
     
     def re_pronounce_character(self):
         """Re-pronounce the current character."""

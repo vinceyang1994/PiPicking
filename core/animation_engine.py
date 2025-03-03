@@ -7,7 +7,7 @@ Handles stroke animation and rendering using Make Me A Hanzi data.
 """
 
 from PyQt5.QtCore import QObject, QTimer, pyqtSignal, Qt
-from PyQt5.QtGui import QPainter, QPainterPath, QColor, QPen
+from PyQt5.QtGui import QPainter, QPainterPath, QColor, QBrush
 import json
 import re
 import random
@@ -53,7 +53,6 @@ class AnimationEngine(QObject):
         
         self.animation_count = 0
         self.target_animation_count = self.config_manager.get("animation_count", 3)
-        self.is_hollow = True
         self.is_animating = False
         self.background_path = QPainterPath()  # 添加背景路径存储
 
@@ -71,14 +70,12 @@ class AnimationEngine(QObject):
         self.background_path = QPainterPath()
         for stroke in self.strokes:
             self.background_path.addPath(stroke.path)
+        # 填充背景路径为浅灰色
+        self.background_path.setFillRule(Qt.WindingFill)
         
-        # Start with hollow display
-        self.is_hollow = True
         self.animation_count = 0
         
-        # Schedule start of animation after display time
-        self.display_timer.start(self.config_manager.get("display_time", 3000))
-        
+        self.start_stroke_animation()
         # Signal to update the display
         self.animation_updated.emit()
 
@@ -147,7 +144,7 @@ class AnimationEngine(QObject):
     def start_stroke_animation(self):
         """Start the stroke animation sequence."""
         self.is_animating = True
-        self.is_hollow = False
+        self.display_timer.stop()
         
         # Increment animation count
         self.animation_count += 1
@@ -155,7 +152,6 @@ class AnimationEngine(QObject):
         if self.animation_count >= self.target_animation_count:
             # Animation sequence complete
             self.animation_completed.emit()
-            self.display_timer.stop()
         
         # Reset all strokes to invisible
         for stroke in self.strokes:
@@ -167,7 +163,6 @@ class AnimationEngine(QObject):
         
         # Signal to update the display
         self.animation_updated.emit()
-        self.display_timer.start(self.config_manager.get("display_time", 3000))
         
     def animate_next_stroke(self):
         """
@@ -187,12 +182,13 @@ class AnimationEngine(QObject):
         
         self.is_animating = False
         # Start next animation round after a delay
-        self.is_hollow = True
         for stroke in self.strokes:
-            stroke.visible = False
+            stroke.visible = False  # 这里可以选择重置可见性，True则保持为笔画着色
         
         self.animation_updated.emit()
-        
+        # Set the aftertaste time after all strokes are displayed, 
+        # and then re-display this/next the Chinese character animation.
+        self.display_timer.start(self.config_manager.get("display_time", 3000))
 
     def render(self, painter, rect):
         """Render the current animation state.
@@ -215,30 +211,19 @@ class AnimationEngine(QObject):
         # 坐标系变换
         painter.translate(offset_x, offset_y)          # 原点移到绘制区域中心
         painter.scale(scale / 1024, -scale / 1024)    # Y轴翻转并缩放
-        painter.translate(-512, -512)                # 中心对齐原始坐标系
+        painter.translate(-512, -412)                # 中心对齐原始坐标系，根据控件微调
         
-        # 绘制灰色背景
-        bg_pen = QPen(QColor("#E0E0E0"), 3)  # 浅灰色
-        bg_pen.setCapStyle(Qt.RoundCap)
-        painter.setPen(bg_pen)
-        painter.drawPath(self.background_path)
+        # 填充背景路径为浅灰色
+        painter.fillPath(self.background_path, QColor(210, 210, 210))  # 浅灰色填充
         
         # 设置绘制样式
-        stroke_color = self.config_manager.get_stroke_color()
-        pen = QPen(stroke_color, 3)
-        pen.setCapStyle(Qt.RoundCap)
-        painter.setPen(pen)
+        stroke_color = QColor(self.config_manager.get_stroke_color())
+        brush = QBrush(stroke_color)  # 创建填充笔刷
+        painter.setBrush(brush)  # 设置填充笔刷
         
         # 绘制可见笔画
         for stroke in self.strokes:
             if stroke.visible:
-                painter.drawPath(stroke.path)
-        
-        # 绘制空心轮廓
-        if self.is_hollow:
-            hollow_pen = QPen(stroke_color, 3)
-            hollow_pen.setStyle(Qt.DashLine)
-            painter.setPen(hollow_pen)
-            painter.drawPath(self.background_path)
+                painter.drawPath(stroke.path)  # 使用填充笔刷绘制路径
         
         painter.restore()
