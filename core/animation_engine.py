@@ -82,7 +82,7 @@ class AnimationEngine(QObject):
     def load_hanzi_data(self, character):
         """Load stroke data from graphics.txt for a given character."""
         try:
-            with open('assets\\graphics.txt', 'r', encoding='utf-8') as f:
+            with open('assets/graphics.txt', 'r', encoding='utf-8') as f:
                 for line in f:
                     data = json.loads(line.strip())
                     if data.get('character') == character:
