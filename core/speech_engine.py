@@ -60,12 +60,12 @@ class SpeechEngine(QObject):
         if not self.config_manager.get("auto_pronounce", True):
             return
             
-        if text and self.speech.state() != QTextToSpeech.Speaking:
+        if text and not self.is_speaking():
             self.speech.say(text)
     
     def stop(self):
         """Stop the current pronunciation."""
-        if self.speech.state() == QTextToSpeech.Speaking:
+        if self.is_speaking():
             self.speech.stop()
     
     def is_speaking(self):
@@ -75,3 +75,11 @@ class SpeechEngine(QObject):
             bool: True if speaking, False otherwise.
         """
         return self.speech.state() == QTextToSpeech.Speaking
+
+    def mute(self):
+        """Mute the speech engine."""
+        self.speech.setVolume(0.0)
+
+    def unmute(self):
+        """Unmute the speech engine."""
+        self.speech.setVolume(1.0)

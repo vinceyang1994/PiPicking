@@ -7,7 +7,7 @@ Handles loading, storing, and accessing Chinese characters.
 """
 
 import os
-import json
+import random
 
 class CharacterManager:
     """Manages Chinese character data for the application."""
@@ -21,6 +21,7 @@ class CharacterManager:
         self.character_file = character_file
         self.characters = []
         self.current_index = 0
+        self.original_characters = []  # 保存原始顺序
         self.load_characters()
     
     def load_characters(self):
@@ -33,9 +34,11 @@ class CharacterManager:
         try:
             with open(self.character_file, 'r', encoding='utf-8') as f:
                 self.characters = [line.strip() for line in f if line.strip()]
+                self.original_characters = self.characters.copy()  # 保存原始顺序
         except IOError:
             print(f"Error loading character file.")
             self.characters = ["一", "二", "三", "四", "五"]
+            self.original_characters = self.characters.copy()
         
         # Reset current index
         self.current_index = 0
@@ -115,3 +118,24 @@ class CharacterManager:
             int: Current index.
         """
         return self.current_index
+    
+    def get_random_character(self):
+        """获取一个随机汉字
+        
+        Returns:
+            str: 随机选择的汉字，如果列表为空则返回空字符串
+        """
+        if not self.characters:
+            return ""
+        
+        return random.choice(self.characters)
+
+    def shuffle_characters(self):
+        """将字符列表随机打乱（考试模式）"""
+        random.shuffle(self.characters)
+        self.current_index = 0  # 重置索引
+
+    def restore_order(self):
+        """恢复字符列表原始顺序（学习模式）"""
+        self.characters = self.original_characters.copy()
+        self.current_index = 0  # 重置索引

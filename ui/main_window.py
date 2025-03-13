@@ -7,7 +7,7 @@ Main window for the Chinese Character Reading Application.
 
 from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QAction, QMenu, 
-    QMessageBox, QLabel, QSizePolicy
+    QMessageBox, QLabel, QSizePolicy, QActionGroup
 )
 from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtGui import QPainter, QFont, QKeyEvent, QMouseEvent
@@ -94,6 +94,8 @@ class MainWindow(QMainWindow):
         
         # Load initial character
         self.load_current_character()
+        
+        self.study_mode = True  # 默认为学习模式
     
     def setup_ui(self):
         """Set up the user interface."""
@@ -141,6 +143,27 @@ class MainWindow(QMainWindow):
         settings_action.triggered.connect(self.show_settings_dialog)
         settings_menu.addAction(settings_action)
         
+        # Mode menu
+        mode_menu = self.menuBar().addMenu('Mode')
+        
+        # 创建动作组，确保只有一个选项可以被选中
+        mode_group = QActionGroup(self)
+        
+        # 学习模式选项
+        self.study_action = QAction('Study', self)
+        self.study_action.setCheckable(True)
+        self.study_action.setChecked(True)  # 默认选中
+        self.study_action.triggered.connect(lambda: self.change_mode('study'))
+        mode_group.addAction(self.study_action)
+        mode_menu.addAction(self.study_action)
+        
+        # 考试模式选项
+        self.exam_action = QAction('Exam', self)
+        self.exam_action.setCheckable(True)
+        self.exam_action.triggered.connect(lambda: self.change_mode('exam'))
+        mode_group.addAction(self.exam_action)
+        mode_menu.addAction(self.exam_action)
+        
         # About menu
         about_menu = self.menuBar().addMenu("&About")
         
@@ -163,8 +186,14 @@ class MainWindow(QMainWindow):
     
     def show_next_character(self):
         """Show the next character."""
-        character = self.character_manager.next_character()
-        self.update_character(character)
+        if self.study_mode:
+            # 学习模式：按顺序显示下一个
+            self.current_character = self.character_manager.next_character()
+        else:
+            # 考试模式：随机显示
+            self.current_character = self.character_manager.get_random_character()
+        
+        self.update_character(self.current_character)
     
     def show_previous_character(self):
         """Show the previous character."""
@@ -232,3 +261,35 @@ class MainWindow(QMainWindow):
         """Show the about dialog."""
         dialog = AboutDialog(self)
         dialog.exec_()
+    
+    def change_mode(self, mode):
+        """切换学习/考试模式
+        
+        Args:
+            mode (str): 'study' 或 'exam'
+        """
+        self.study_mode = (mode == 'study')
+        
+        # 更新菜单项的选中状态
+        self.study_action.setChecked(self.study_mode)
+        self.exam_action.setChecked(not self.study_mode)
+        
+        if self.study_mode:
+            # 学习模式：恢复原始顺序
+            self.character_manager.restore_order()
+            self.speech_engine.unmute()
+        else:
+            # 考试模式：随机打乱顺序
+            self.character_manager.shuffle_characters()
+            self.speech_engine.stop()
+            self.speech_engine.mute()
+        
+        # 更新显示当前字符
+        self.current_character = self.character_manager.get_current_character()
+        self.animation_engine.set_character(self.current_character)
+
+    def paintEvent(self, event):
+        """重写绘制事件，用于渲染汉字"""
+        if hasattr(self, 'animation_engine'):
+            painter = QPainter(self)
+            self.animation_engine.render(painter, self.rect())
