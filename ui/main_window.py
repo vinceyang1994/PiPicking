@@ -9,8 +9,8 @@ from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QAction, QMenu, 
     QMessageBox, QLabel, QSizePolicy, QActionGroup
 )
-from PyQt5.QtCore import Qt, pyqtSlot
-from PyQt5.QtGui import QPainter, QColor, QPalette, QIcon
+from PyQt5.QtCore import Qt, pyqtSlot, QTimer
+from PyQt5.QtGui import QPainter, QFont, QKeyEvent, QColor, QPalette, QIcon
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QEvent
 
@@ -37,7 +37,7 @@ class CharacterWidget(QWidget):
         self.animation_engine.animation_updated.connect(self.update)
         
         # Set focus policy to receive key events
-        self.setFocusPolicy(Qt.StrongFocus)
+        self.setFocusPolicy(Qt.NoFocus)  # 禁止获取焦点
         
         # Set size policy to expand
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -105,6 +105,8 @@ class MainWindow(QMainWindow):
         
         self._is_fullscreen = False  # 新增全屏状态标志
         self.init_window_state()
+        self.setFocusPolicy(Qt.StrongFocus)
+        QTimer.singleShot(100, self.force_focus)  # 延迟确保焦点设置
     
     def init_window_state(self):
         """初始化窗口状态"""
@@ -124,12 +126,25 @@ class MainWindow(QMainWindow):
             self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
         
         self._is_fullscreen = not self._is_fullscreen
-        self.show()  # 必须重新显示窗口使标志生效
+        self.show()
+        self.setFocus()  # 增加焦点设置
     
     def keyPressEvent(self, event):
-        """ESC键退出全屏"""
-        if event.key() == Qt.Key_Escape and self._is_fullscreen:
+        """处理键盘事件"""
+        # 确保焦点在窗口上
+        if not self.hasFocus():
+            self.setFocus()
+        
+        # 处理方向键
+        if event.key() == Qt.Key_Up:
+            self.show_previous_character()
+            event.accept()
+        elif event.key() == Qt.Key_Down:
+            self.show_next_character()
+            event.accept()
+        elif event.key() == Qt.Key_Escape and self._is_fullscreen:
             self.toggle_fullscreen()
+            event.accept()
         else:
             super().keyPressEvent(event)
     
@@ -218,20 +233,17 @@ class MainWindow(QMainWindow):
         about_menu.addAction(about_action)
     
     def show_next_character(self):
-        """Show the next character."""
-        if self.study_mode:
-            # 学习模式：按顺序显示下一个
-            self.current_character = self.character_manager.next_character()
-        else:
-            # 考试模式：随机显示
-            self.current_character = self.character_manager.get_random_character()
-        
-        self.update_character(self.current_character)
+        """显示下一个汉字"""
+        self.character_manager.next_character()
+        self.load_current_character()
+        # 调试输出
+        print(f"当前汉字：{self.character_manager.get_current_character()}")
     
     def show_previous_character(self):
-        """Show the previous character."""
-        character = self.character_manager.previous_character()
-        self.update_character(character)
+        """显示上一个汉字"""
+        self.character_manager.previous_character()
+        self.load_current_character()
+        print(f"当前汉字：{self.character_manager.get_current_character()}")
     
     def load_current_character(self):
         """Load the current character."""
@@ -350,3 +362,15 @@ class MainWindow(QMainWindow):
         # 立即重绘界面
         self.update()
         QApplication.processEvents()
+
+    # 新增焦点事件处理
+    def focusInEvent(self, event):
+        """获得焦点时强制更新"""
+        self.activateWindow()
+        self.setFocus()
+        super().focusInEvent(event)
+
+    def force_focus(self):
+        """强制获取焦点"""
+        self.activateWindow()
+        self.setFocus()

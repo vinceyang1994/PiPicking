@@ -72,7 +72,8 @@ class CharacterManager:
         if not self.characters:
             return ""
         
-        self.current_index = (self.current_index + 1) % len(self.characters)
+        if self.current_index < len(self.characters) - 1:
+            self.current_index += 1
         return self.get_current_character()
     
     def previous_character(self):
@@ -84,7 +85,8 @@ class CharacterManager:
         if not self.characters:
             return ""
         
-        self.current_index = (self.current_index - 1) % len(self.characters)
+        if self.current_index > 0:
+            self.current_index -= 1
         return self.get_current_character()
     
     def add_character(self, character):

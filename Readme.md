@@ -1,6 +1,31 @@
 ## 简介
-本工程是一个汉字阅读应用，旨在帮助幼儿识字和学习汉字书写。应用提供了汉字展示、笔画动画、发音功能和设置菜单，用户可以自定义笔画颜色、字号大小、汉字字体和书写动画次数。
+本工程是一个汉字阅读应用，旨在帮助幼儿识字和学习汉字书写。应用提供了以下核心功能：
 
+### 新增功能
+- 🌓 背景亮度调节（0-100级可调，支持滑动条实时预览）
+- 🖥️ 全屏模式（点击最大化按钮进入无边框全屏，ESC键退出）
+- ↔️ 方向键导航（↑↓键切换汉字）
+
+### 基础功能
+- 汉字展示与笔画动画
+- 自动发音功能（支持多音字识别）
+- 可配置的字体设置（字号、字体家族）
+- 学习/考试双模式切换
+- 动画参数配置（次数、间隔、持续时间）
+
+## 操作指南
+```diff
++ 快捷键说明：
++ - ↑键：上一个汉字
++ - ↓键：下一个汉字
++ - ESC：退出全屏模式
++ - 最大化按钮：进入全屏模式
++
++ 亮度调节：
++ 1. 打开设置对话框（Settings → Preferences）
++ 2. 在"背景亮度"分组下拖动滑动条
++ 3. 实时预览效果，保存后生效
+```
 
 ## 起源
 我是个程序员，每天在电脑前的时间比较长。家里小朋友4岁了，叫小丕，总是喜欢凑到跟前看我在干什么，但是又看不懂密密麻麻的字，比较担忧他看屏幕时间太长，没有给他用电子屏幕放过动画片。所以我就想给他做一个他能用的软件，还能帮助识字。
@@ -8,42 +33,69 @@
 一次记十个字，也谐音识字。而且笔画也都简单。
 
 ## 工程目录
-```
+```diff
 reading_app/
 │
-├── main.py                   # Entry point for the application
-├── config.json               # Configuration file
-├── characters.txt            # Character database
+├── main.py                   # 应用入口
+├── config.json               # 配置文件（存储亮度、字体等设置）
+├── characters.txt            # 汉字库
 │
-├── assets/                   # Assets directory
-│   ├── fonts/                # Font files
-│   └── icons/                # UI icons
+├── assets/                   # 资源文件
+│   ├── fonts/                # 字体文件
+│   └── icons/                # 应用图标
 │
-├── core/                     # Core logic components
-│   ├── character_manager.py  # Character data management
-│   ├── animation_engine.py   # Stroke animation logic
-│   ├── config_manager.py     # Configuration handling
-│   └── speech_engine.py      # Text-to-speech functionality
+├── core/                     # 核心逻辑
+│   ├── character_manager.py  # 汉字数据管理（新增导航方法）
+│   ├── animation_engine.py   # 笔画动画逻辑
+│   ├── config_manager.py     # 配置管理（新增亮度信号处理）
+│   └── speech_engine.py      # 语音引擎
 │
-└── ui/                       # User interface components
-    ├── main_window.py        # Main application window
-    ├── settings_dialog.py    # Settings dialog
-    ├── about_dialog.py       # About dialog
-    └── font_dialog.py        # Font management dialog
+└── ui/                       # 用户界面
+    ├── main_window.py        # 主窗口（新增全屏/亮度控制）
+    ├── settings_dialog.py    # 设置对话框（新增亮度调节UI）
+    ├── about_dialog.py       # 关于对话框
+    └── font_dialog.py        # 字体管理对话框
 ```
-# TODO
-- [ ] 多音字
-- [ ] 汉字组词-变换背景-接入AI生成对应的图像
-- [ ] 背景场景
-- [ ] 标注拼音
-- [ ] 测试模式，打乱出现顺序。读音滞后
-- [ ] 标记哪些字熟悉，哪些字不认识（左键不认识，右键熟悉）文档中同时记录展示频率和认识程度。同时更改出现频率
-- [ ] 笔画更像人写的话使用Hanzi Writer这个JS库合适，不过就是另外项目了
-- [ ] 背景反色
-- [ ] 声音音色可选
-- [ ] 静音按钮
-- [ ] 自动下一个汉字，包括暂停键
-- [ ] 笔画动画停止选项
+
+## TODO
+
+### 核心功能增强
+- [ ] 多音字支持
+- [ ] 汉字组词功能（支持AI生成对应图像背景）
+- [ ] 拼音标注系统
+- [ ] 智能测试模式（随机顺序+延迟发音）
+- [ ] 学习进度跟踪（标记熟悉度/调整出现频率）
+
+### 用户体验改进
+- [ ] 声音管理系统
+  - [ ] 音色选择功能
+  - [ ] 预加载优化（解决2秒延迟问题）
+- [ ] 自动播放控制
+  - [ ] 自动切换汉字
+  - [ ] 暂停/继续功能
+- [ ] 动画控制
+  - [ ] 笔画动画暂停/继续
+  - [ ] 人写风格动画（集成Hanzi Writer）
+
+### 界面优化
+- [ ] 背景场景系统
+- [ ] 字体切换支持（需重构SVG生成逻辑）
+- [ ] 亮度预设方案（护眼模式/夜间模式）
+
+### 技术优化
+- [ ] 跨平台适配
+  - [ ] Linux全屏模式兼容
+  - [ ] Windows高DPI适配
+- [ ] 快捷键自定义系统
+
+### BUG修复
+- [ ] 竖钩SVG渲染异常（拐角翻转问题）
 - [ ] 声音不能快速找到并加载，有些字显示了2s声音还没来
-- [ ] 更换显示字体，但是整个的绘画逻辑就需要改变。当前使用SVG作图，要得到对应字体的SVG行不通。
-- [ ] bug:竖钩的svg显示拐角处翻转了
+
+## 技术亮点
+```diff
++ 1. 实时配置更新系统：通过Qt信号槽机制实现设置变更的即时反馈
++ 2. 双状态背景管理：同时使用QPalette和StyleSheet确保背景色可靠性
++ 3. 无边框全屏切换：通过动态修改WindowFlags实现平滑过渡
++ 4. 焦点管理：智能焦点控制确保键盘事件正确响应
+```

@@ -1,6 +1,6 @@
 {
     "stroke_color": "#ff0000",
-    "is_mixed_color": true,
+    "is_mixed_color": false,
     "font_size": 620,
     "font_family": "System",
     "animation_count": 3,
@@ -8,5 +8,5 @@
     "display_time": 2000,
     "auto_pronounce": true,
     "graphics_path": "assets/graphics.txt",
-    "background_brightness": 25
+    "background_brightness": 55
 }
