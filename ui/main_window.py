@@ -10,8 +10,9 @@ from PyQt5.QtWidgets import (
     QMessageBox, QLabel, QSizePolicy, QActionGroup
 )
 from PyQt5.QtCore import Qt, pyqtSlot
-from PyQt5.QtGui import QPainter, QColor, QPalette
+from PyQt5.QtGui import QPainter, QColor, QPalette, QIcon
 from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import QEvent
 
 from core.character_manager import CharacterManager
 from core.animation_engine import AnimationEngine
@@ -101,6 +102,46 @@ class MainWindow(QMainWindow):
         
         # 初始化背景色
         self.update_background()
+        
+        self._is_fullscreen = False  # 新增全屏状态标志
+        self.init_window_state()
+    
+    def init_window_state(self):
+        """初始化窗口状态"""
+        # 设置窗口图标和标题
+        self.setWindowTitle("小丕拾字")
+        self.setWindowIcon(QIcon('assets/app.ico'))
+        # 初始为最大化状态
+        self.showMaximized()
+    
+    def toggle_fullscreen(self):
+        """切换全屏/正常模式"""
+        if self._is_fullscreen:
+            self.showNormal()
+            self.setWindowFlags(self.windowFlags() & ~Qt.FramelessWindowHint)
+        else:
+            self.showFullScreen()
+            self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
+        
+        self._is_fullscreen = not self._is_fullscreen
+        self.show()  # 必须重新显示窗口使标志生效
+    
+    def keyPressEvent(self, event):
+        """ESC键退出全屏"""
+        if event.key() == Qt.Key_Escape and self._is_fullscreen:
+            self.toggle_fullscreen()
+        else:
+            super().keyPressEvent(event)
+    
+    def changeEvent(self, event):
+        """处理最大化按钮点击"""
+        if event.type() == QEvent.WindowStateChange:
+            if self.windowState() & Qt.WindowMaximized:
+                if not self._is_fullscreen:
+                    self.toggle_fullscreen()
+            elif self._is_fullscreen:
+                self.toggle_fullscreen()
+        super().changeEvent(event)
     
     def setup_ui(self):
         """Set up the user interface."""
@@ -175,19 +216,6 @@ class MainWindow(QMainWindow):
         about_action = QAction("&About", self)
         about_action.triggered.connect(self.show_about_dialog)
         about_menu.addAction(about_action)
-    
-    def keyPressEvent(self, event):
-        """Handle key press events.
-        
-        Args:
-            event (QKeyEvent): Key event.
-        """
-        if event.key() == Qt.Key_Up:
-            self.show_previous_character()
-        elif event.key() == Qt.Key_Down:
-            self.show_next_character()
-        else:
-            super().keyPressEvent(event)
     
     def show_next_character(self):
         """Show the next character."""

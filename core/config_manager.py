@@ -23,7 +23,8 @@ class ConfigManager(QObject):
         "animation_interval": 1000, # Default animation interval in ms
         "display_time": 3000,       # Time to display character before animation (ms)
         "auto_pronounce": True,     # Auto-pronounce new characters
-        "background_brightness": 100  # Default background brightness
+        "background_brightness": 100,  # Default background brightness
+        "window_state": "maximized"  # Default window state
     }
     
     config_updated = pyqtSignal()  # 新增信号
@@ -122,3 +123,9 @@ class ConfigManager(QObject):
     def update_background(self):
         # Implementation of update_background method
         pass
+
+    def get_window_state(self):
+        return self.get("window_state", "maximized")
+    
+    def set_window_state(self, state):
+        self.set("window_state", state)
