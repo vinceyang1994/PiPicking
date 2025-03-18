@@ -10,7 +10,7 @@ from PyQt5.QtGui import QColor, QFontDatabase
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QGridLayout,
     QLabel, QPushButton, QCheckBox, QComboBox,
-    QSpinBox, QColorDialog, QGroupBox, QFontComboBox
+    QSpinBox, QColorDialog, QGroupBox, QFontComboBox, QSlider
 )
 
 class SettingsDialog(QDialog):
@@ -25,12 +25,16 @@ class SettingsDialog(QDialog):
         """
         super().__init__(parent)
         self.config_manager = config_manager
+        self.preview_window = parent  # 假设父窗口是MainWindow
         
         self.setWindowTitle("Settings")
         self.setMinimumWidth(400)
         
         self.setup_ui()
         self.load_settings()
+        
+        # 连接实时更新信号
+        self.brightness_slider.valueChanged.connect(self.update_brightness_preview)
     
     def setup_ui(self):
         """Set up the user interface."""
@@ -121,6 +125,26 @@ class SettingsDialog(QDialog):
         animation_group.setLayout(animation_layout)
         layout.addWidget(animation_group)
         
+        # 新增背景亮度设置组
+        brightness_group = QGroupBox("背景亮度")
+        brightness_layout = QGridLayout()
+        
+        self.brightness_slider = QSlider(Qt.Horizontal)
+        self.brightness_slider.setMinimum(0)
+        self.brightness_slider.setMaximum(100)
+        self.brightness_slider.setTickInterval(10)
+        
+        self.brightness_spin = QSpinBox()
+        self.brightness_spin.setMinimum(0)
+        self.brightness_spin.setMaximum(100)
+        
+        brightness_layout.addWidget(QLabel("亮度调节:"), 0, 0)
+        brightness_layout.addWidget(self.brightness_slider, 0, 1)
+        brightness_layout.addWidget(self.brightness_spin, 0, 2)
+        
+        brightness_group.setLayout(brightness_layout)
+        layout.insertWidget(3, brightness_group)  # 插入到动画设置和音频设置之间
+        
         # Audio Settings Group
         audio_group = QGroupBox("Audio Settings")
         audio_layout = QVBoxLayout()
@@ -187,6 +211,15 @@ class SettingsDialog(QDialog):
         self.auto_pronounce_checkbox.setChecked(
             self.config_manager.get("auto_pronounce", True)
         )
+        
+        # 新增亮度设置
+        brightness = self.config_manager.get("background_brightness", 100)
+        self.brightness_slider.setValue(brightness)
+        self.brightness_spin.setValue(brightness)
+        
+        # 连接信号
+        self.brightness_slider.valueChanged.connect(self.brightness_spin.setValue)
+        self.brightness_spin.valueChanged.connect(self.brightness_slider.setValue)
     
     def save_settings(self):
         """Save settings and close dialog."""
@@ -213,6 +246,11 @@ class SettingsDialog(QDialog):
         
         # Auto pronounce
         self.config_manager.set("auto_pronounce", self.auto_pronounce_checkbox.isChecked())
+        
+        # 保存亮度设置
+        self.config_manager.set("background_brightness", 
+                              self.brightness_slider.value(), 
+                              temporary=False)
         
         self.accept()
     
@@ -246,3 +284,15 @@ class SettingsDialog(QDialog):
         current_size = int(self.font_size_label.text())
         new_size = max(current_size - 10, 30)  # Minimum 30
         self.font_size_label.setText(str(new_size))
+
+    def _preview_brightness(self, value):
+        """实时预览亮度效果"""
+        if self.preview_window:
+            # 临时修改配置并更新
+            self.config_manager.set("background_brightness", value, temporary=True)
+            self.preview_window.update_background()
+
+    def update_brightness_preview(self, value):
+        """实时更新背景预览"""
+        # 使用临时修改模式避免频繁写盘
+        self.config_manager.set("background_brightness", value, temporary=True)

@@ -9,8 +9,9 @@ Handles loading and saving configuration settings.
 import json
 import os
 from PyQt5.QtGui import QColor
+from PyQt5.QtCore import QObject, pyqtSignal
 
-class ConfigManager:
+class ConfigManager(QObject):
     """Manages application configuration settings."""
     
     DEFAULT_CONFIG = {
@@ -21,8 +22,11 @@ class ConfigManager:
         "animation_count": 3,       # Default number of animations
         "animation_interval": 1000, # Default animation interval in ms
         "display_time": 3000,       # Time to display character before animation (ms)
-        "auto_pronounce": True      # Auto-pronounce new characters
+        "auto_pronounce": True,     # Auto-pronounce new characters
+        "background_brightness": 100  # Default background brightness
     }
+    
+    config_updated = pyqtSignal()  # 新增信号
     
     def __init__(self, config_file="config.json"):
         """Initialize the configuration manager.
@@ -30,8 +34,10 @@ class ConfigManager:
         Args:
             config_file (str): Path to the configuration file.
         """
+        super().__init__()
         self.config_file = config_file
         self.config = self._load_config()
+        self.update_background()  # 添加初始背景设置
     
     def _load_config(self):
         """Load configuration from file or create default if not exists.
@@ -78,15 +84,18 @@ class ConfigManager:
         """
         return self.config.get(key, default)
     
-    def set(self, key, value):
+    def set(self, key, value, temporary=False):
         """Set a configuration value and save.
         
         Args:
             key (str): Configuration key.
             value: Value to set.
+            temporary: Whether the change is temporary (not saved to file)
         """
         self.config[key] = value
-        self.save_config()
+        if not temporary:
+            self.save_config()
+        self.config_updated.emit()
     
     def get_stroke_color(self):
         """Get the stroke color as a QColor object.
@@ -103,3 +112,13 @@ class ConfigManager:
             color (QColor): The color to set.
         """
         self.set("stroke_color", color.name())
+    
+    def get_background_brightness(self):
+        return self.get("background_brightness", 100)
+    
+    def set_background_brightness(self, value):
+        self.set("background_brightness", value)
+
+    def update_background(self):
+        # Implementation of update_background method
+        pass

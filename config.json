@@ -7,5 +7,6 @@
     "animation_interval": 1000,
     "display_time": 2000,
     "auto_pronounce": true,
-    "graphics_path": "assets/graphics.txt"
+    "graphics_path": "assets/graphics.txt",
+    "background_brightness": 25
 }

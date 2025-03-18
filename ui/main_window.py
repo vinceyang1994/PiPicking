@@ -10,7 +10,8 @@ from PyQt5.QtWidgets import (
     QMessageBox, QLabel, QSizePolicy, QActionGroup
 )
 from PyQt5.QtCore import Qt, pyqtSlot
-from PyQt5.QtGui import QPainter, QFont, QKeyEvent, QMouseEvent
+from PyQt5.QtGui import QPainter, QColor, QPalette
+from PyQt5.QtWidgets import QApplication
 
 from core.character_manager import CharacterManager
 from core.animation_engine import AnimationEngine
@@ -79,6 +80,7 @@ class MainWindow(QMainWindow):
         """
         super().__init__()
         self.config_manager = config_manager
+        self.config_manager.config_updated.connect(self.update_background)
         
         # Initialize core components
         self.character_manager = CharacterManager()
@@ -96,6 +98,9 @@ class MainWindow(QMainWindow):
         self.load_current_character()
         
         self.study_mode = True  # 默认为学习模式
+        
+        # 初始化背景色
+        self.update_background()
     
     def setup_ui(self):
         """Set up the user interface."""
@@ -293,3 +298,27 @@ class MainWindow(QMainWindow):
         if hasattr(self, 'animation_engine'):
             painter = QPainter(self)
             self.animation_engine.render(painter, self.rect())
+
+    def update_background(self):
+        """更可靠的背景色更新方法"""
+        brightness = self.config_manager.get("background_brightness", 100)
+        rgb_value = int(255 * (brightness / 100))
+        
+        # 同时设置QPalette和样式表确保覆盖
+        palette = self.palette()
+        bg_color = QColor(rgb_value, rgb_value, rgb_value)
+        palette.setColor(QPalette.Window, bg_color)
+        self.setPalette(palette)
+        
+        # 强制更新所有子控件
+        self.setStyleSheet(f"""
+            QMainWindow, QWidget {{
+                background-color: rgb({rgb_value},{rgb_value},{rgb_value});
+            }}
+            QLabel {{
+                color: { "black" if brightness > 50 else "white" };
+            }}
+        """)
+        # 立即重绘界面
+        self.update()
+        QApplication.processEvents()
