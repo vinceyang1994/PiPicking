@@ -8,11 +8,12 @@ Handles loading, storing, and accessing Chinese characters.
 
 import os
 import random
+import yaml
 
 class CharacterManager:
     """Manages Chinese character data for the application."""
     
-    def __init__(self, character_file="characters.txt"):
+    def __init__(self, character_file="characters.yaml"):
         """Initialize the character manager.
         
         Args:
@@ -20,27 +21,53 @@ class CharacterManager:
         """
         self.character_file = character_file
         self.characters = []
+        self.character_data = {}  # 新增属性
         self.current_index = 0
         self.original_characters = []  # 保存原始顺序
         self.load_characters()
     
     def load_characters(self):
-        """Load characters from the character file."""
+        """Load characters from the YAML character file."""
         if not os.path.exists(self.character_file):
-            # Create empty file if it doesn't exist
+            # 创建示例YAML文件
+            sample_data = {
+                'groups': [
+                    {
+                        'name': '基础汉字',
+                        'characters': [
+                            {'character': '一', 'words': []},
+                            {'character': '二', 'words': []}
+                        ]
+                    }
+                ]
+            }
             with open(self.character_file, 'w', encoding='utf-8') as f:
-                f.write("一\n二\n三\n四\n五\n六\n七\n八\n九\n十")
-        
+                yaml.dump(sample_data, f, allow_unicode=True)
+
         try:
             with open(self.character_file, 'r', encoding='utf-8') as f:
-                self.characters = [line.strip() for line in f if line.strip()]
-                self.original_characters = self.characters.copy()  # 保存原始顺序
-        except IOError:
-            print(f"Error loading character file.")
-            self.characters = ["一", "二", "三", "四", "五"]
+                data = yaml.safe_load(f)
+                
+            # 提取所有字符并保持原始顺序
+            self.characters = []
+            self.character_data = {}  # 新增数据结构存储完整信息
+            for group in data['groups']:
+                for char_info in group['characters']:
+                    char = char_info['character']
+                    if char not in self.character_data:
+                        self.characters.append(char)
+                        self.character_data[char] = {
+                            'group': group['name'],
+                            'words': char_info['words']
+                        }
+            
+            self.original_characters = self.characters.copy()
+            
+        except (IOError, yaml.YAMLError) as e:
+            print(f"Error loading character file: {str(e)}")
+            self.characters = ["一", "二", "三"]
             self.original_characters = self.characters.copy()
         
-        # Reset current index
         self.current_index = 0
     
     def save_characters(self):
@@ -141,3 +168,8 @@ class CharacterManager:
         """恢复字符列表原始顺序（学习模式）"""
         self.characters = self.original_characters.copy()
         self.current_index = 0  # 重置索引
+
+    def get_current_character_info(self):
+        """获取当前字符的完整信息"""
+        char = self.get_current_character()
+        return self.character_data.get(char, {})
