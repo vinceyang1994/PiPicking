@@ -1,65 +1,63 @@
 groups:
-  - name: 基础汉字
-    characters:
-      - character: 一
-        words:
-          - name: 一个
-            en: one
-            image: images/one.png
-          - name: 一起
-            en: together
-            image: images/together.png
-      - character: 人
-        words: []
-
-  - name: 自然现象
-    characters:
-      - character: 日
-        words:
-          - name: 太阳
-            en: sun
-            image: images/sun.png
-      - character: 月
-        words:
-          - name: 月亮
-            en: moon
-            image: images/moon.png
-
-  - name: 地理特征
-    characters:
-      - character: 山
-        words:
-          - name: 山峰
-            en: mountain
-            image: images/mountain.png
-      - character: 江
-        words:
-          - name: 长江
-            en: Yangtze River
-            image: images/yangtze.png
-
-  - name: 元素相关
-    characters:
-      - character: 火
-        words:
-          - name: 火焰
-            en: flame
-            image: images/flame.png
-      - character: 水
-        words:
-          - name: 水果
-            en: fruit
-            image: images/fruit.png
-
-  - name: 植物相关
-    characters:
-      - character: 木
-        words:
-          - name: 树木
-            en: tree
-            image: images/tree.png
-      - character: 杨
-        words:
-          - name: 杨树
-            en: poplar
-            image: images/poplar.png 
+- name: 基础汉字
+  characters:
+  - character: 一
+    words:
+    - name: 一个
+      en: one
+      image: images/one.png
+    - name: 一起
+      en: together
+      image: images/together.png
+  - character: 人
+    words: []
+  - character: 永
+    words: []
+- name: 自然现象
+  characters:
+  - character: 日
+    words:
+    - name: 太阳
+      en: sun
+      image: images/sun.png
+  - character: 月
+    words:
+    - name: 月亮
+      en: moon
+      image: images/moon.png
+- name: 地理特征
+  characters:
+  - character: 山
+    words:
+    - name: 山峰
+      en: mountain
+      image: images/mountain.png
+  - character: 江
+    words:
+    - name: 长江
+      en: Yangtze River
+      image: images/yangtze.png
+- name: 元素相关
+  characters:
+  - character: 火
+    words:
+    - name: 火焰
+      en: flame
+      image: images/flame.png
+  - character: 水
+    words:
+    - name: 水果
+      en: fruit
+      image: images/fruit.png
+- name: 植物相关
+  characters:
+  - character: 木
+    words:
+    - name: 树木
+      en: tree
+      image: images/tree.png
+  - character: 杨
+    words:
+    - name: 杨树
+      en: poplar
+      image: images/poplar.png

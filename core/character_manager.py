@@ -116,20 +116,47 @@ class CharacterManager:
             self.current_index -= 1
         return self.get_current_character()
     
-    def add_character(self, character):
-        """Add a new character to the list.
+    def add_character(self, character, group_name="基础汉字"):
+        """添加新字符到指定分组
         
         Args:
-            character (str): Character to add.
+            character (str): 要添加的汉字
+            group_name (str): 目标分组名称，默认为"基础汉字"
             
         Returns:
-            bool: True if added successfully, False otherwise.
+            bool: 添加成功返回True，失败返回False
         """
-        if not character or character in self.characters:
+        if not character:
             return False
+
+        # 读取现有YAML数据
+        with open(self.character_file, 'r', encoding='utf-8') as f:
+            data = yaml.safe_load(f) or {'groups': []}
+
+        # 查找或创建目标分组
+        target_group = next((g for g in data['groups'] if g['name'] == group_name), None)
+        if not target_group:
+            target_group = {'name': group_name, 'characters': []}
+            data['groups'].append(target_group)
+
+        # 检查字符是否已存在
+        if any(c['character'] == character for c in target_group['characters']):
+            return False
+
+        # 添加新字符
+        target_group['characters'].append({'character': character, 'words': []})
         
+        # 更新内存数据
         self.characters.append(character)
-        self.save_characters()
+        self.character_data[character] = {
+            'group': group_name,
+            'words': []
+        }
+        
+        # 保存到YAML文件
+        with open(self.character_file, 'w', encoding='utf-8') as f:
+            yaml.dump(data, f, allow_unicode=True, sort_keys=False)
+        
         return True
     
     def get_character_count(self):
